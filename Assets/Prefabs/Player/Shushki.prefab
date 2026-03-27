@@ -256,6 +256,10 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 256
+  spriteIdle: {fileID: 21300000, guid: 3a89f318beda6454a9a1e24cf849ec22, type: 3}
+  spriteWalk2: {fileID: 21300000, guid: 0a6f7c0bf2b0ad94cbcd071a9d2f72b3, type: 3}
+  spriteJump: {fileID: 21300000, guid: dd315f190d05a0b4997757f94a5ce6ef, type: 3}
+  walkFrameInterval: 0.15
 --- !u!114 &3607891566586523895
 MonoBehaviour:
   m_ObjectHideFlags: 0

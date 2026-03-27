@@ -16,8 +16,13 @@ namespace BeatEmPie
         [SerializeField] float groundCheckRadius = 0.15f;
         [SerializeField] LayerMask groundLayer;
 
+        [Header("Sprites")]
+        [SerializeField] Sprite spriteIdle;
+        [SerializeField] Sprite spriteWalk2;
+        [SerializeField] Sprite spriteJump;
+        [SerializeField] float walkFrameInterval = 0.15f;  // seconds per walk frame
+
         Rigidbody2D rb;
-        Animator animator;
         PlayerStats stats;
         SpriteRenderer spriteRenderer;
 
@@ -25,14 +30,13 @@ namespace BeatEmPie
         bool jumpQueued;
         bool isGrounded;
 
-        static readonly int SpeedHash      = Animator.StringToHash("Speed");
-        static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
-        static readonly int JumpStartHash  = Animator.StringToHash("JumpStart");
+        // Walk alternation
+        bool walkFrame;       // false = idle frame, true = walk2 frame
+        float walkTimer;
 
         void Awake()
         {
             rb             = GetComponent<Rigidbody2D>();
-            animator       = GetComponent<Animator>();
             stats          = GetComponent<PlayerStats>();
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
@@ -51,8 +55,8 @@ namespace BeatEmPie
         void Update()
         {
             CheckGrounded();
+            UpdateSprite();
             FlipSprite();
-            if (animator != null) UpdateAnimator();
         }
 
         void FixedUpdate()
@@ -63,7 +67,6 @@ namespace BeatEmPie
             if (jumpQueued)
             {
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-                if (animator != null) animator.SetTrigger(JumpStartHash);
                 jumpQueued = false;
             }
         }
@@ -74,10 +77,39 @@ namespace BeatEmPie
                          Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
         }
 
-        void UpdateAnimator()
+        void UpdateSprite()
         {
-            animator.SetFloat(SpeedHash, Mathf.Abs(moveInput.x));
-            animator.SetBool(IsGroundedHash, isGrounded);
+            if (!isGrounded)
+            {
+                // In the air — hold jump sprite
+                spriteRenderer.sprite = spriteJump != null ? spriteJump : spriteIdle;
+                walkTimer = 0f;
+                walkFrame = false;
+                return;
+            }
+
+            bool moving = Mathf.Abs(moveInput.x) > 0.01f;
+
+            if (moving)
+            {
+                // Alternate idle ↔ walk2 every walkFrameInterval
+                walkTimer -= Time.deltaTime;
+                if (walkTimer <= 0f)
+                {
+                    walkFrame = !walkFrame;
+                    walkTimer = walkFrameInterval;
+                }
+                spriteRenderer.sprite = walkFrame
+                    ? (spriteWalk2 != null ? spriteWalk2 : spriteIdle)
+                    : (spriteIdle  != null ? spriteIdle  : spriteRenderer.sprite);
+            }
+            else
+            {
+                // Standing still — idle sprite, reset walk cycle
+                spriteRenderer.sprite = spriteIdle != null ? spriteIdle : spriteRenderer.sprite;
+                walkTimer = 0f;
+                walkFrame = false;
+            }
         }
 
         void FlipSprite()
@@ -87,10 +119,6 @@ namespace BeatEmPie
                 spriteRenderer.flipX = moveInput.x > 0;
         }
 
-        void OnDeath()
-        {
-            if (animator != null) animator.SetTrigger(Animator.StringToHash("Die"));
-            enabled = false;
-        }
+        void OnDeath() => enabled = false;
     }
 }

@@ -363,6 +363,7 @@ GameObject:
   - component: {fileID: 652150082}
   - component: {fileID: 652150081}
   - component: {fileID: 652150080}
+  - component: {fileID: 652150086}
   m_Layer: 0
   m_Name: GameManagers
   m_TagString: Untagged
@@ -548,6 +549,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &652150086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 652150079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da9faf59584b6a74f87720097b668909, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BeatEmPie.MusicDebugController
+  tracks:
+  - {fileID: 8300000, guid: efaffade6eacd8a498ac855d3b83545b, type: 3}
+  - {fileID: 8300000, guid: ad1d7ab1b30e91244b3b954c6a21c456, type: 3}
+  - {fileID: 8300000, guid: 1adc6473999f2244a9eabe6aef7f9dea, type: 3}
+  - {fileID: 8300000, guid: a67619096cef2a245a25e8ca2cecb36d, type: 3}
+  - {fileID: 8300000, guid: 3892a29e1d4ce5a43afcdd32a5c032f6, type: 3}
+  - {fileID: 8300000, guid: ed68888caa2659144b233a18d57a092f, type: 3}
+  labels:
+  - Pie Shop (Main Menu)
+  - Streets of Dough (Calm)
+  - Pie Storm (Intense)
+  - The Whale Rises (Boss)
+  - Pie Smash! (Victory)
+  - The Pies Are Gone (Game Over)
 --- !u!28 &1125642817
 Texture2D:
   m_ObjectHideFlags: 0
