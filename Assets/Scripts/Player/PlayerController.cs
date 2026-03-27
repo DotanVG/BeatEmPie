@@ -37,21 +37,10 @@ namespace BeatEmPie
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
-        void OnEnable()
-        {
-            stats.OnDeath += OnDeath;
-        }
+        void OnEnable()  => stats.OnDeath += OnDeath;
+        void OnDisable() => stats.OnDeath -= OnDeath;
 
-        void OnDisable()
-        {
-            stats.OnDeath -= OnDeath;
-        }
-
-        // Called by Unity Input System via PlayerInput component
-        public void OnMove(InputValue value)
-        {
-            moveInput = value.Get<Vector2>();
-        }
+        public void OnMove(InputValue value) => moveInput = value.Get<Vector2>();
 
         public void OnJump(InputValue value)
         {
@@ -62,34 +51,27 @@ namespace BeatEmPie
         void Update()
         {
             CheckGrounded();
-            UpdateAnimator();
             FlipSprite();
+            if (animator != null) UpdateAnimator();
         }
 
         void FixedUpdate()
         {
             if (stats.IsDead) return;
-
             rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
 
             if (jumpQueued)
             {
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-                animator.SetTrigger(JumpStartHash);
+                if (animator != null) animator.SetTrigger(JumpStartHash);
                 jumpQueued = false;
             }
         }
 
         void CheckGrounded()
         {
-            bool wasGrounded = isGrounded;
             isGrounded = groundCheck != null &&
                          Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-
-            if (!wasGrounded && isGrounded)
-                animator.SetBool(IsGroundedHash, true);
-            else if (wasGrounded && !isGrounded)
-                animator.SetBool(IsGroundedHash, false);
         }
 
         void UpdateAnimator()
@@ -106,7 +88,7 @@ namespace BeatEmPie
 
         void OnDeath()
         {
-            animator.SetTrigger(Animator.StringToHash("Die"));
+            if (animator != null) animator.SetTrigger(Animator.StringToHash("Die"));
             enabled = false;
         }
     }

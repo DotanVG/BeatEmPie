@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 
 namespace BeatEmPie
 {
-    [RequireComponent(typeof(Animator))]
     [RequireComponent(typeof(PlayerStats))]
     public class PlayerCombat : MonoBehaviour
     {
@@ -29,14 +28,12 @@ namespace BeatEmPie
                 cooldownTimer -= Time.deltaTime;
         }
 
-        // Called by Unity Input System via PlayerInput component
         public void OnAttack(InputValue value)
         {
             if (!value.isPressed || stats.IsDead || cooldownTimer > 0f) return;
-
-            animator.SetTrigger(AttackHash);
+            if (animator != null) animator.SetTrigger(AttackHash);
             cooldownTimer = throwCooldown;
-            // Pie instantiation will be added when PieBase prefabs exist
+            Debug.Log("[PlayerCombat] Attack! Pie throwing coming soon.");
         }
 
         public void OnSwitchPieNext(InputValue value)
