@@ -82,8 +82,9 @@ namespace BeatEmPie
 
         void FlipSprite()
         {
+            // Sprite naturally faces left, so flip when moving right
             if (moveInput.x != 0)
-                spriteRenderer.flipX = moveInput.x < 0;
+                spriteRenderer.flipX = moveInput.x > 0;
         }
 
         void OnDeath()
