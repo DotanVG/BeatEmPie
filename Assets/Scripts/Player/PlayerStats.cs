@@ -1,28 +1,45 @@
 using UnityEngine;
 using System;
 
-/// <summary>
-/// Tracks Shushki's runtime stats — health, speed, and damage events.
-/// Communicates with HealthBar UI via events.
-/// </summary>
-public class PlayerStats : MonoBehaviour
+namespace BeatEmPie
 {
-    // float maxHealth
-    // float currentHealth
+    public class PlayerStats : MonoBehaviour
+    {
+        [Header("Health")]
+        [SerializeField] float maxHealth = 100f;
 
-    // float moveSpeed
-    // float jumpForce
+        public float MaxHealth => maxHealth;
+        public float CurrentHealth { get; private set; }
+        public bool IsDead { get; private set; }
 
-    // Action OnDeath event — fired when health reaches zero
-    // Action<float, float> OnHealthChanged — fired with (current, max) for UI
+        public event Action OnDeath;
+        public event Action<float, float> OnHealthChanged;
 
-    // Reference to HealthBar UI component
+        void Start()
+        {
+            CurrentHealth = maxHealth;
+            OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
+        }
 
-    // Start: initialize health to max
+        public void TakeDamage(float amount)
+        {
+            if (IsDead) return;
+            CurrentHealth = Mathf.Max(0f, CurrentHealth - amount);
+            OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
+            if (CurrentHealth <= 0f) Die();
+        }
 
-    // TakeDamage(float amount): reduce health, fire OnHealthChanged, check death
+        public void Heal(float amount)
+        {
+            if (IsDead) return;
+            CurrentHealth = Mathf.Min(maxHealth, CurrentHealth + amount);
+            OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
+        }
 
-    // Heal(float amount): restore health, clamp to max, fire OnHealthChanged
-
-    // Die(): fire OnDeath event, trigger death sequence
+        void Die()
+        {
+            IsDead = true;
+            OnDeath?.Invoke();
+        }
+    }
 }
