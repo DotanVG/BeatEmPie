@@ -400,9 +400,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4cde5ec39c59744b9292a06e8e37afc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeatEmPie.GameManager
-  trackMainMenu: {fileID: 0}
-  trackVictory: {fileID: 0}
-  trackGameOver: {fileID: 0}
+  trackMainMenu: {fileID: 8300000, guid: efaffade6eacd8a498ac855d3b83545b, type: 3}
+  trackVictory: {fileID: 8300000, guid: 3892a29e1d4ce5a43afcdd32a5c032f6, type: 3}
+  trackGameOver: {fileID: 8300000, guid: ed68888caa2659144b233a18d57a092f, type: 3}
   dynamicMusic: {fileID: 652150082}
 --- !u!114 &652150082
 MonoBehaviour:
@@ -416,9 +416,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b45acb4e88c4fe74fa9dc1e559be7fda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeatEmPie.DynamicMusicController
-  trackGameplayCalm: {fileID: 0}
-  trackGameplayIntense: {fileID: 0}
-  trackBossFight: {fileID: 0}
+  trackGameplayCalm: {fileID: 8300000, guid: ad1d7ab1b30e91244b3b954c6a21c456, type: 3}
+  trackGameplayIntense: {fileID: 8300000, guid: 1adc6473999f2244a9eabe6aef7f9dea, type: 3}
+  trackBossFight: {fileID: 8300000, guid: a67619096cef2a245a25e8ca2cecb36d, type: 3}
   intenseEnemyThreshold: 5
   checkInterval: 2
 --- !u!114 &652150083
