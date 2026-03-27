@@ -1,31 +1,126 @@
+using System.Collections;
 using UnityEngine;
-using System.Collections.Generic;
 
-/// <summary>
-/// Singleton audio manager — handles all SFX and music playback.
-/// Noam's audio assets will be routed through this system.
-/// </summary>
-public class AudioManager : MonoBehaviour
+namespace BeatEmPie
 {
-    // Singleton instance
-    public static AudioManager Instance;
+    [RequireComponent(typeof(AudioSource))]
+    public class AudioManager : MonoBehaviour
+    {
+        public static AudioManager Instance { get; private set; }
 
-    // AudioSource sfxSource
-    // AudioSource musicSource
+        [Header("Volume")]
+        [Range(0f, 1f)] [SerializeField] float musicVolume = 0.6f;
+        [Range(0f, 1f)] [SerializeField] float sfxVolume   = 1f;
 
-    // Dictionary<string, AudioClip> soundLibrary — named sound lookup
+        [Header("CrossFade")]
+        [SerializeField] float defaultCrossFadeDuration = 1.5f;
 
-    // float sfxVolume
-    // float musicVolume
+        AudioSource musicSourceA;
+        AudioSource musicSourceB;
+        AudioSource activeMusicSource;
+        AudioSource sfxSource;
 
-    // Awake: set up singleton
+        Coroutine crossFadeCoroutine;
 
-    // PlaySFX(string name): play a named sound effect
-    // PlaySFX(AudioClip clip): play a direct clip
+        void Awake()
+        {
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
 
-    // PlayMusic(AudioClip track): start background music
-    // StopMusic(): stop current music
+            // Create four AudioSources: A+B for crossfading music, one for SFX
+            musicSourceA = CreateSource("MusicA", loop: true,  volume: musicVolume);
+            musicSourceB = CreateSource("MusicB", loop: true,  volume: 0f);
+            sfxSource    = CreateSource("SFX",    loop: false, volume: sfxVolume);
 
-    // SetSFXVolume(float volume)
-    // SetMusicVolume(float volume)
+            activeMusicSource = musicSourceA;
+        }
+
+        // ── Music ──────────────────────────────────────────────────────────
+
+        public void PlayMusic(AudioClip clip)
+        {
+            if (clip == null) return;
+            if (activeMusicSource.clip == clip && activeMusicSource.isPlaying) return;
+
+            activeMusicSource.clip   = clip;
+            activeMusicSource.volume = musicVolume;
+            activeMusicSource.Play();
+        }
+
+        public void StopMusic()
+        {
+            musicSourceA.Stop();
+            musicSourceB.Stop();
+        }
+
+        public void PauseMusic()  => activeMusicSource.Pause();
+        public void ResumeMusic() => activeMusicSource.UnPause();
+
+        public void CrossFade(AudioClip newClip, float duration = -1f)
+        {
+            if (newClip == null) return;
+            if (activeMusicSource.clip == newClip && activeMusicSource.isPlaying) return;
+
+            if (crossFadeCoroutine != null) StopCoroutine(crossFadeCoroutine);
+            float dur = duration < 0f ? defaultCrossFadeDuration : duration;
+            crossFadeCoroutine = StartCoroutine(DoCrossFade(newClip, dur));
+        }
+
+        IEnumerator DoCrossFade(AudioClip newClip, float duration)
+        {
+            var outgoing = activeMusicSource;
+            var incoming = outgoing == musicSourceA ? musicSourceB : musicSourceA;
+
+            incoming.clip   = newClip;
+            incoming.volume = 0f;
+            incoming.Play();
+            activeMusicSource = incoming;
+
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed        += Time.unscaledDeltaTime;
+                float t         = elapsed / duration;
+                incoming.volume = Mathf.Lerp(0f, musicVolume, t);
+                outgoing.volume = Mathf.Lerp(musicVolume, 0f, t);
+                yield return null;
+            }
+
+            incoming.volume = musicVolume;
+            outgoing.Stop();
+            outgoing.clip = null;
+        }
+
+        // ── SFX ───────────────────────────────────────────────────────────
+
+        public void PlaySFX(AudioClip clip)
+        {
+            if (clip == null) return;
+            sfxSource.PlayOneShot(clip, sfxVolume);
+        }
+
+        // ── Volume ────────────────────────────────────────────────────────
+
+        public void SetMusicVolume(float v)
+        {
+            musicVolume = Mathf.Clamp01(v);
+            if (activeMusicSource.isPlaying) activeMusicSource.volume = musicVolume;
+        }
+
+        public void SetSFXVolume(float v) => sfxVolume = Mathf.Clamp01(v);
+
+        // ── Helpers ───────────────────────────────────────────────────────
+
+        AudioSource CreateSource(string label, bool loop, float volume)
+        {
+            var go = new GameObject(label);
+            go.transform.SetParent(transform);
+            var src    = go.AddComponent<AudioSource>();
+            src.loop   = loop;
+            src.volume = volume;
+            src.playOnAwake = false;
+            return src;
+        }
+    }
 }

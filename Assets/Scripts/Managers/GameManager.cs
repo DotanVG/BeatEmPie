@@ -1,32 +1,105 @@
 using UnityEngine;
 
-/// <summary>
-/// Central game manager — singleton that controls overall game state.
-/// Tracks score, current wave, and holds references to core systems.
-/// </summary>
-public class GameManager : MonoBehaviour
+namespace BeatEmPie
 {
-    // Singleton instance
-    public static GameManager Instance;
+    public enum GameState { MainMenu, Playing, Paused, Victory, GameOver }
 
-    // Current game state
-    // GameState: MainMenu, Playing, Paused, GameOver
+    public class GameManager : MonoBehaviour
+    {
+        public static GameManager Instance { get; private set; }
 
-    // int currentScore
-    // int currentWave
+        [Header("Music Clips")]
+        [SerializeField] AudioClip trackMainMenu;
+        [SerializeField] AudioClip trackVictory;
+        [SerializeField] AudioClip trackGameOver;
 
-    // Reference to EnemySpawner
-    // Reference to PieInventory
+        [Header("References")]
+        [SerializeField] DynamicMusicController dynamicMusic;
 
-    // Awake: set up singleton pattern
+        public GameState State       { get; private set; } = GameState.MainMenu;
+        public int       CurrentScore { get; private set; }
+        public int       CurrentWave  { get; private set; }
 
-    // StartGame(): transition to Playing state, begin first wave
+        public event System.Action<GameState> OnStateChanged;
+        public event System.Action<int>       OnScoreChanged;
 
-    // PauseGame() / ResumeGame(): toggle pause state
+        void Awake()
+        {
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
 
-    // GameOver(): trigger game over sequence
+        void Start()
+        {
+            SetState(GameState.MainMenu);
+        }
 
-    // AddScore(int amount): add to score, update UI
+        // ── Public API ────────────────────────────────────────────────────
 
-    // OnWaveComplete(): notify spawner to begin next wave
+        public void StartGame()
+        {
+            CurrentScore = 0;
+            CurrentWave  = 0;
+            OnScoreChanged?.Invoke(CurrentScore);
+
+            SetState(GameState.Playing);
+
+            dynamicMusic?.StartGameplayMusic();
+            EnemySpawner.Instance?.StartSpawning();
+        }
+
+        public void PauseGame()
+        {
+            if (State != GameState.Playing) return;
+            Time.timeScale = 0f;
+            AudioManager.Instance?.PauseMusic();
+            SetState(GameState.Paused);
+        }
+
+        public void ResumeGame()
+        {
+            if (State != GameState.Paused) return;
+            Time.timeScale = 1f;
+            AudioManager.Instance?.ResumeMusic();
+            SetState(GameState.Playing);
+        }
+
+        public void TriggerVictory()
+        {
+            EnemySpawner.Instance?.StopSpawning();
+            AudioManager.Instance?.CrossFade(trackVictory, 1f);
+            SetState(GameState.Victory);
+        }
+
+        public void TriggerGameOver()
+        {
+            EnemySpawner.Instance?.StopSpawning();
+            AudioManager.Instance?.CrossFade(trackGameOver, 1f);
+            SetState(GameState.GameOver);
+        }
+
+        public void AddScore(int amount)
+        {
+            CurrentScore += amount;
+            OnScoreChanged?.Invoke(CurrentScore);
+        }
+
+        public void OnWaveComplete()
+        {
+            CurrentWave++;
+            EnemySpawner.Instance?.StartSpawning();
+        }
+
+        // ── Internal ──────────────────────────────────────────────────────
+
+        void SetState(GameState next)
+        {
+            State = next;
+            OnStateChanged?.Invoke(next);
+
+            if (next == GameState.MainMenu)
+                AudioManager.Instance?.CrossFade(trackMainMenu, 1f);
+        }
+    }
 }
