@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents (Claude Code, Warp, Cursor, Copi
 
 ## Project Overview
 
-**BeatEmPie** is a 2D beat-em-up Unity game where a character named **Shushki** fights fish and whales using pies as weapons. The project is in early development — no gameplay scripts exist yet.
+**BeatEmPie** is a 2D beat-em-up Unity game where a character named **Shushki** fights fish and whales using pies as weapons.
 
 ## Unity Setup
 
@@ -15,20 +15,37 @@ This file provides guidance to AI coding agents (Claude Code, Warp, Cursor, Copi
 
 ## Current State
 
-- Only a default `SampleScene` and the auto-generated Input System actions exist
-- No C# scripts, prefabs, sprites, or audio assets yet
-- Packages: Unity 2D Feature pack, Input System, AI Assistant, AI Inference, Test Framework
+Core systems are implemented; combat mechanics are still in progress:
+
+- **Done:** GameManager state machine, player movement/health/events, wave spawning, audio manager with crossfading, dynamic music controller, pie type definitions
+- **Placeholder:** Enemy AI (FishEnemy, WhaleEnemy), pie projectile mechanics, StatusEffectHandler, PieInventory↔PlayerCombat wiring, HealthBar/PieHUD
+- One scene: `Assets/Scenes/SampleScene.unity`
+- Input actions: `Assets/InputSystem_Actions.inputactions`
 
 ## Project Structure
 
 ```
 Assets/
-  Scenes/         # Unity scenes
+  Art/Sprites/          # Player, Enemies, Pies, UI sprites
+  Art/Animations/       # Player animation frames
+  Art/Tilemaps/
+  Audio/Music/          # 6 procedural soundtrack tracks
+  Audio/SFX/
+  Prefabs/              # Player, Enemies, FX prefabs
+  Scripts/
+    Combat/             # PieBase, PieType, pie subclasses (10), StatusEffect
+    Enemies/            # EnemyBase, FishEnemy, WhaleEnemy
+    Managers/           # GameManager, AudioManager, EnemySpawner, DynamicMusicController, etc.
+    Player/             # PlayerController, PlayerStats, PlayerCombat
+    UI/                 # HealthBar, PieHUD
+  Scenes/               # SampleScene.unity (only scene)
+  VFX/
   InputSystem_Actions.inputactions
-Packages/         # UPM package manifest
-ProjectSettings/  # Unity project settings
-.claude/          # Claude Code config and MCP skills
-AGENTS.md         # This file
+Packages/               # UPM package manifest
+ProjectSettings/        # Unity project settings
+.claude/                # Claude Code config and MCP skills
+AGENTS.md               # This file
+CLAUDE.md               # Architecture guide for Claude Code
 ```
 
 ## Working with This Project
