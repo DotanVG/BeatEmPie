@@ -29,18 +29,16 @@ namespace BeatEmPie
             target = FindNearestEnemy();
         }
 
-        new void Update()
+        // PieBase.Update() handles sprite spin; we add homing on top via FixedUpdate
+        void FixedUpdate()
         {
-            // Spin handled by base Update, then we steer
-            base.Update();   // calls the spin in PieBase.Update (inherited via normal Update override)
-
             if (target == null) return;
             if (target.GetComponent<EnemyBase>()?.IsDead == true) { target = FindNearestEnemy(); return; }
 
-            Vector2 desiredDir  = ((Vector2)(target.position - transform.position)).normalized;
-            Vector2 currentVel  = rb.linearVelocity;
-            Vector2 newVel      = Vector2.Lerp(currentVel.normalized, desiredDir, homingStrength * Time.deltaTime) * speed;
-            rb.linearVelocity   = newVel;
+            Vector2 desiredDir = ((Vector2)(target.position - transform.position)).normalized;
+            Vector2 currentVel = rb.linearVelocity;
+            Vector2 newVel     = Vector2.Lerp(currentVel.normalized, desiredDir, homingStrength * Time.fixedDeltaTime) * speed;
+            rb.linearVelocity  = newVel;
         }
 
         Transform FindNearestEnemy()

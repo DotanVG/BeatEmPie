@@ -72,6 +72,14 @@ namespace BeatEmPie
             activeEnemies.Add(go);
         }
 
+        /// <summary>Called by GameBootstrapper if Inspector fields are null.</summary>
+        public void Configure(GameObject fishPrefab, GameObject whalePrefab, Transform[] points)
+        {
+            if (fishEnemyPrefab  == null) fishEnemyPrefab  = fishPrefab;
+            if (whaleEnemyPrefab == null) whaleEnemyPrefab = whalePrefab;
+            if (spawnPoints == null || spawnPoints.Length == 0) spawnPoints = points;
+        }
+
         public void NotifyEnemyDied(GameObject enemy)
         {
             activeEnemies.Remove(enemy);

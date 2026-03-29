@@ -60,6 +60,17 @@ namespace BeatEmPie
             inventory.CyclePrev();
         }
 
+        // ── Bootstrap API ────────────────────────────────────────────────
+
+        /// <summary>Called by GameBootstrapper if Inspector fields are null.</summary>
+        public void Configure(GameObject[] pies, Transform origin)
+        {
+            if (piePrefabs == null || piePrefabs.Length == 0 || piePrefabs[0] == null)
+                piePrefabs = pies;
+            if (throwOrigin == null)
+                throwOrigin = origin;
+        }
+
         // ── Throwing ──────────────────────────────────────────────────────
 
         void ThrowPie(PieType type)
