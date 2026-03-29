@@ -1,13 +1,30 @@
 using UnityEngine;
 
-/// <summary>
-/// Chocolate Pie — Damage Over Time. Enemies slip and take tick damage from the mess.
-/// </summary>
-public class ChocolatePie : PieBase
+namespace BeatEmPie
 {
-    // float tickDamage
-    // float tickInterval
-    // float puddleDuration
-    // Override OnImpact(): spawn chocolate puddle on ground
-    // Puddle applies slow + DOT to any enemy standing in it
+    /// <summary>
+    /// Chocolate Pie — Slows + DoT. Applies Slowed status and ongoing tick damage.
+    /// PLACEHOLDER: dark brown circle. ARTIST: needs Fly + gooey Splat + puddle ground decal.
+    /// SFX: wet splat + gooey loop SFX.
+    /// </summary>
+    public class ChocolatePie : PieBase
+    {
+        [Header("Chocolate — DoT + Slow")]
+        [SerializeField] float slowDuration = 3f;
+        [SerializeField] float dotDuration  = 4f;
+
+        protected override void Awake()
+        {
+            placeholderColor = new Color(0.35f, 0.18f, 0.05f); // dark chocolate brown
+            pieType          = PieType.Chocolate;
+            damage           = 15f;
+            base.Awake();
+        }
+
+        protected override void OnImpact(EnemyBase enemy)
+        {
+            enemy.ApplyStatusEffect(StatusEffect.Slowed,  slowDuration);
+            enemy.ApplyStatusEffect(StatusEffect.Burning, dotDuration);  // reuse Burning for DoT
+        }
+    }
 }

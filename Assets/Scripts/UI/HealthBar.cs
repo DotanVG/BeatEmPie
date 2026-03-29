@@ -1,22 +1,77 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Controls Shushki's health bar UI element.
-/// Subscribes to PlayerStats events and updates the Slider smoothly.
-/// </summary>
-public class HealthBar : MonoBehaviour
+namespace BeatEmPie
 {
-    // Slider slider reference
-    // float lerpSpeed — how fast the bar animates
+    /// <summary>
+    /// Drives the health bar Slider from PlayerStats events.
+    /// Auto-finds PlayerStats if not assigned. Smooth lerp animation.
+    /// PLACEHOLDER: Unity default Slider. ARTIST: replace with custom health bar sprite.
+    /// </summary>
+    public class HealthBar : MonoBehaviour
+    {
+        [Header("References")]
+        [SerializeField] Slider      slider;
+        [SerializeField] PlayerStats playerStats;   // auto-found if null
 
-    // Reference to PlayerStats
+        [Header("Animation")]
+        [SerializeField] float lerpSpeed = 8f;
 
-    // Start: subscribe to OnHealthChanged event, set initial value
+        float targetValue;
 
-    // SetMaxHealth(float max): configure slider max value
+        // ── Lifecycle ─────────────────────────────────────────────────────
 
-    // SetHealth(float current): update slider, trigger lerp
+        void Start()
+        {
+            if (playerStats == null)
+            {
+                var playerGO = GameObject.FindGameObjectWithTag("Player");
+                if (playerGO != null) playerStats = playerGO.GetComponent<PlayerStats>();
+            }
 
-    // Update: lerp slider value toward target for smooth animation
+            if (playerStats != null)
+            {
+                playerStats.OnHealthChanged += OnHealthChanged;
+                SetMax(playerStats.MaxHealth);
+                SetTarget(playerStats.CurrentHealth);
+                if (slider != null) slider.value = targetValue;
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (playerStats != null)
+                playerStats.OnHealthChanged -= OnHealthChanged;
+        }
+
+        // ── Events ────────────────────────────────────────────────────────
+
+        void OnHealthChanged(float current, float max)
+        {
+            SetMax(max);
+            SetTarget(current);
+        }
+
+        // ── Update ────────────────────────────────────────────────────────
+
+        void Update()
+        {
+            if (slider == null) return;
+            slider.value = Mathf.Lerp(slider.value, targetValue, lerpSpeed * Time.deltaTime);
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────
+
+        void SetMax(float max)
+        {
+            if (slider == null) return;
+            slider.minValue = 0f;
+            slider.maxValue = max;
+        }
+
+        void SetTarget(float current)
+        {
+            targetValue = current;
+        }
+    }
 }

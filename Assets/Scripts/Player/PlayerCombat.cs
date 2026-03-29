@@ -3,49 +3,110 @@ using UnityEngine.InputSystem;
 
 namespace BeatEmPie
 {
+    /// <summary>
+    /// Handles player attack input: reads current pie from PieInventory,
+    /// checks cooldown, spawns pie prefab and launches it toward nearest enemy.
+    /// WIRING: assign piePrefabs[0..9] in Inspector matching PieType enum order.
+    /// throwOrigin: child transform positioned at the player's throwing hand.
+    /// </summary>
     [RequireComponent(typeof(PlayerStats))]
+    [RequireComponent(typeof(PieInventory))]
     public class PlayerCombat : MonoBehaviour
     {
         [Header("Pie Throwing")]
         [SerializeField] Transform throwOrigin;
-        [SerializeField] float throwCooldown = 0.5f;
 
-        Animator animator;
-        PlayerStats stats;
-        float cooldownTimer;
+        [Header("Pie Prefabs — index matches PieType enum (0=Apple … 9=Chili)")]
+        [SerializeField] GameObject[] piePrefabs = new GameObject[10];
 
-        static readonly int AttackHash = Animator.StringToHash("Attack");
+        [Header("Throw Settings")]
+        [SerializeField] float throwAngle = -35f;   // degrees below horizontal
+        [SerializeField] float throwRange = 15f;    // max distance to auto-aim
+
+        PlayerStats  stats;
+        PieInventory inventory;
+        SpriteRenderer sr;
 
         void Awake()
         {
-            animator = GetComponent<Animator>();
-            stats    = GetComponent<PlayerStats>();
+            stats     = GetComponent<PlayerStats>();
+            inventory = GetComponent<PieInventory>();
+            sr        = GetComponent<SpriteRenderer>();
         }
 
-        void Update()
-        {
-            if (cooldownTimer > 0f)
-                cooldownTimer -= Time.deltaTime;
-        }
+        // ── Input callbacks (Unity Input System) ─────────────────────────
 
         public void OnAttack(InputValue value)
         {
-            if (!value.isPressed || stats.IsDead || cooldownTimer > 0f) return;
-            if (animator != null) animator.SetTrigger(AttackHash);
-            cooldownTimer = throwCooldown;
-            Debug.Log("[PlayerCombat] Attack! Pie throwing coming soon.");
+            if (!value.isPressed) return;
+            if (stats.IsDead) return;
+            if (GameManager.Instance?.State != GameState.Playing) return;
+
+            var pieType = inventory.GetCurrentPie();
+            if (inventory.IsOnCooldown(pieType)) return;
+
+            ThrowPie(pieType);
         }
 
         public void OnSwitchPieNext(InputValue value)
         {
-            if (value.isPressed)
-                Debug.Log("[PlayerCombat] Switch pie next — PieInventory not yet wired");
+            if (!value.isPressed) return;
+            inventory.CycleNext();
         }
 
         public void OnSwitchPiePrev(InputValue value)
         {
-            if (value.isPressed)
-                Debug.Log("[PlayerCombat] Switch pie prev — PieInventory not yet wired");
+            if (!value.isPressed) return;
+            inventory.CyclePrev();
+        }
+
+        // ── Throwing ──────────────────────────────────────────────────────
+
+        void ThrowPie(PieType type)
+        {
+            int idx = (int)type;
+            if (idx >= piePrefabs.Length || piePrefabs[idx] == null)
+            {
+                Debug.LogWarning($"[PlayerCombat] No prefab assigned for pie type {type} (index {idx})");
+                return;
+            }
+
+            Vector3 origin = throwOrigin != null ? throwOrigin.position : transform.position + Vector3.up * 0.5f;
+            Vector2 dir    = GetThrowDirection();
+
+            var pieGO = Instantiate(piePrefabs[idx], origin, Quaternion.identity);
+            pieGO.GetComponent<PieBase>()?.Launch(dir);
+
+            inventory.TriggerCooldown(type);
+        }
+
+        Vector2 GetThrowDirection()
+        {
+            // Prefer aiming at nearest enemy in range
+            var enemy = FindNearestEnemy();
+            if (enemy != null)
+            {
+                Vector2 toEnemy = (enemy.transform.position - transform.position);
+                return toEnemy.normalized;
+            }
+
+            // Fallback: throw in the direction the player faces with slight downward arc
+            float facingX = (sr != null && sr.flipX) ? -1f : 1f;
+            float rad     = throwAngle * Mathf.Deg2Rad;
+            return new Vector2(facingX * Mathf.Cos(rad), Mathf.Sin(rad)).normalized;
+        }
+
+        Transform FindNearestEnemy()
+        {
+            var enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            Transform nearest  = null;
+            float     bestDist = float.MaxValue;
+            foreach (var e in enemies)
+            {
+                float d = Vector2.Distance(transform.position, e.transform.position);
+                if (d < bestDist && d < throwRange) { bestDist = d; nearest = e.transform; }
+            }
+            return nearest;
         }
     }
 }
