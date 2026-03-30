@@ -42,10 +42,25 @@ namespace BeatEmPie
             if (stats.IsDead) return;
             if (GameManager.Instance?.State != GameState.Playing) return;
 
-            var pieType = inventory.GetCurrentPie();
+            var pieType = inventory.SelectedPie;
             if (inventory.IsOnCooldown(pieType)) return;
+            if (!inventory.HasAmmo(pieType)) return;   // no pies of this type
 
             ThrowPie(pieType);
+        }
+
+        // Allow number keys 1-9, 0 to select hotbar slots directly
+        void Update()
+        {
+            for (int i = 0; i <= 9; i++)
+            {
+                var key = i == 0 ? KeyCode.Alpha0 : (KeyCode)(KeyCode.Alpha1 + i - 1);
+                if (Input.GetKeyDown(key))
+                {
+                    inventory?.SelectSlot(i == 0 ? 9 : i - 1);
+                    break;
+                }
+            }
         }
 
         public void OnSwitchPieNext(InputValue value)
@@ -86,9 +101,10 @@ namespace BeatEmPie
             Vector2 dir    = GetThrowDirection();
 
             var pieGO = Instantiate(piePrefabs[idx], origin, Quaternion.identity);
+            pieGO.SetActive(true);
             pieGO.GetComponent<PieBase>()?.Launch(dir);
 
-            inventory.TriggerCooldown(type);
+            inventory.ConsumePie(type);   // decrements quantity + starts cooldown
         }
 
         Vector2 GetThrowDirection()

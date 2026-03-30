@@ -120,8 +120,37 @@ namespace BeatEmPie
             rb.constraints    = RigidbodyConstraints2D.FreezeAll;
             OnDeathEvent?.Invoke();
             GameManager.Instance?.AddScore(scoreValue);
+            SpawnDrops();
             EnemySpawner.Instance?.NotifyEnemyDied(gameObject);
             Destroy(gameObject, 0.4f);
+        }
+
+        protected virtual void SpawnDrops()
+        {
+            int wave = EnemySpawner.Instance?.CurrentWave ?? 1;
+            var isWhale = this is WhaleEnemy;
+
+            DropResult[] results;
+            if (isWhale)
+                results = PieDropTable.RollWhaleDrop(wave);
+            else
+            {
+                var singleRoll = PieDropTable.RollFishDrop(wave);
+                results = singleRoll.HasValue ? new[] { singleRoll.Value } : System.Array.Empty<DropResult>();
+            }
+
+            foreach (var drop in results)
+                SpawnPieDrop(drop);
+        }
+
+        void SpawnPieDrop(DropResult drop)
+        {
+            if (GameBootstrapper.PieDropPrefab == null) return;
+            var go = Object.Instantiate(GameBootstrapper.PieDropPrefab,
+                                        transform.position + Vector3.up * 0.3f,
+                                        Quaternion.identity);
+            go.SetActive(true);
+            go.GetComponent<PieDrop>()?.Init(drop.Type, drop.Qty);
         }
 
         // ── Helpers ───────────────────────────────────────────────────────

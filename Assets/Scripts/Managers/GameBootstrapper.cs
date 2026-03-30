@@ -21,6 +21,9 @@ namespace BeatEmPie
     /// </summary>
     public class GameBootstrapper : MonoBehaviour
     {
+        /// <summary>Global reference to the PieDrop template. Set at startup.</summary>
+        public static GameObject PieDropPrefab { get; private set; }
+
         // Spawn point positions relative to scene center (x, y)
         static readonly Vector2[] SpawnOffsets =
         {
@@ -85,6 +88,9 @@ namespace BeatEmPie
                 combat.Configure(piePrefabs, throwOrigin);
             else
                 Debug.LogWarning("[Bootstrap] PlayerCombat not found on Player.");
+
+            // --- PieDrop template ---
+            PieDropPrefab = BuildPieDropTemplate(pieColors[0]); // recolored per type at init
 
             // --- UI Canvas ---
             EnsureUICanvas(playerGO);
@@ -192,6 +198,26 @@ namespace BeatEmPie
             return prefabs;
         }
 
+        // ── PieDrop template ─────────────────────────────────────────────
+
+        GameObject BuildPieDropTemplate(Color baseColor)
+        {
+            var go = new GameObject("PieDrop_Template");
+            go.SetActive(false);
+
+            var sr    = go.AddComponent<SpriteRenderer>();
+            sr.sprite = MakeCircleSprite(baseColor, 32, "PieDropSprite");
+            sr.color  = baseColor;
+            go.transform.localScale = Vector3.one * 0.4f;
+
+            go.AddComponent<Rigidbody2D>();
+            go.AddComponent<CircleCollider2D>();
+            go.AddComponent<PieDrop>();
+
+            DontDestroyOnLoad(go);
+            return go;
+        }
+
         // ── Spawn points ──────────────────────────────────────────────────
 
         Transform[] EnsureSpawnPoints()
@@ -240,10 +266,10 @@ namespace BeatEmPie
             // Health Bar (Slider)
             BuildHealthBar(canvasGO.transform, playerGO);
 
-            // Pie HUD
-            canvasGO.AddComponent<PieHUD>();   // OnGUI driven
+            // Pie Hotbar — Minecraft-style slot bar (OnGUI driven)
+            canvasGO.AddComponent<PieHotbar>();
 
-            // Game UI overlay
+            // Game UI overlay (main menu, game over, score, etc.)
             canvasGO.AddComponent<GameUI>();
         }
 
